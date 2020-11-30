@@ -154,6 +154,7 @@ public class WebServer implements Service {
     private final Set<WebThread> running =
             Collections.synchronizedSet(new HashSet<WebThread>());
     private boolean ssl;
+    private String adminPassword;
     private final HashMap<String, ConnectionInfo> connInfoMap = new HashMap<>();
 
     private long lastTimeoutCheck;
@@ -278,6 +279,7 @@ public class WebServer implements Service {
                 "webSSL", false);
         allowOthers = SortedProperties.getBooleanProperty(prop,
                 "webAllowOthers", false);
+        adminPassword = SortedProperties.getStringProperty(prop, "adminPassword", null);
         commandHistoryString = prop.getProperty(COMMAND_HISTORY);
         for (int i = 0; args != null && i < args.length; i++) {
             String a = args[i];
@@ -294,6 +296,8 @@ public class WebServer implements Service {
                 SysProperties.setBaseDir(baseDir);
             } else if (Tool.isOption(a, "-ifExists")) {
                 ifExists = true;
+            } else if (Tool.isOption(a, "-adminPassword")) {
+                adminPassword = args[++i];
             } else if (Tool.isOption(a, "-properties")) {
                 // already set
                 i++;
@@ -680,6 +684,9 @@ public class WebServer implements Service {
                 prop.setProperty("webSSL",
                         "" + SortedProperties.getBooleanProperty(old,
                         "webSSL", ssl));
+                if (adminPassword != null && !adminPassword.isEmpty()) {
+                    prop.setProperty("adminPassword", adminPassword);
+                }
                 if (commandHistoryString != null) {
                     prop.setProperty(COMMAND_HISTORY, commandHistoryString);
                 }
@@ -847,6 +854,17 @@ public class WebServer implements Service {
 
     boolean getAllowChunked() {
         return allowChunked;
+    }
+
+    String getAdminPassword() {
+        return adminPassword;
+    }
+
+    boolean checkAdminPassword(String password) {
+        if (adminPassword == null) {
+            return false;
+        }
+        return adminPassword.equals(password);
     }
 
 }

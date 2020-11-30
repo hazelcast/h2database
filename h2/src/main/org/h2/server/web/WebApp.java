@@ -168,6 +168,14 @@ public class WebApp {
         trace(file);
         if (file.endsWith(".do")) {
             file = process(file);
+        } else if (file.endsWith(".jsp")) {
+            switch (file) {
+                case "admin.jsp":
+                case "tools.jsp":
+                    if (!checkAdmin(file)) {
+                        file = process("adminLogin.do");
+                    }
+            }
         }
         return file;
     }
@@ -207,44 +215,84 @@ public class WebApp {
     private String process(String file) {
         trace("process " + file);
         while (file.endsWith(".do")) {
-            if ("login.do".equals(file)) {
-                file = login();
-            } else if ("index.do".equals(file)) {
-                file = index();
-            } else if ("logout.do".equals(file)) {
-                file = logout();
-            } else if ("settingRemove.do".equals(file)) {
-                file = settingRemove();
-            } else if ("settingSave.do".equals(file)) {
-                file = settingSave();
-            } else if ("test.do".equals(file)) {
-                file = test();
-            } else if ("query.do".equals(file)) {
-                file = query();
-            } else if ("tables.do".equals(file)) {
-                file = tables();
-            } else if ("editResult.do".equals(file)) {
-                file = editResult();
-            } else if ("getHistory.do".equals(file)) {
-                file = getHistory();
-            } else if ("admin.do".equals(file)) {
-                file = admin();
-            } else if ("adminSave.do".equals(file)) {
-                file = adminSave();
-            } else if ("adminStartTranslate.do".equals(file)) {
-                file = adminStartTranslate();
-            } else if ("adminShutdown.do".equals(file)) {
-                file = adminShutdown();
-            } else if ("autoCompleteList.do".equals(file)) {
-                file = autoCompleteList();
-            } else if ("tools.do".equals(file)) {
-                file = tools();
-            } else {
-                file = "error.jsp";
+            switch (file) {
+                case "login.do":
+                    file = login();
+                    break;
+                case "index.do":
+                    file = index();
+                    break;
+                case "logout.do":
+                    file = logout();
+                    break;
+                case "settingRemove.do":
+                    file = settingRemove();
+                    break;
+                case "settingSave.do":
+                    file = settingSave();
+                    break;
+                case "test.do":
+                    file = test();
+                    break;
+                case "query.do":
+                    file = query();
+                    break;
+                case "tables.do":
+                    file = tables();
+                    break;
+                case "editResult.do":
+                    file = editResult();
+                    break;
+                case "getHistory.do":
+                    file = getHistory();
+                    break;
+                case "admin.do":
+                    file = checkAdmin(file) ? admin() : "adminLogin.do";
+                    break;
+                case "adminSave.do":
+                    file = checkAdmin(file) ? adminSave() : "adminLogin.do";
+                    break;
+                case "adminStartTranslate.do":
+                    file = checkAdmin(file) ? adminStartTranslate() : "adminLogin.do";
+                    break;
+                case "adminShutdown.do":
+                    file = checkAdmin(file) ? adminShutdown() : "adminLogin.do";
+                    break;
+                case "autoCompleteList.do":
+                    file = autoCompleteList();
+                    break;
+                case "tools.do":
+                    file = checkAdmin(file) ? tools() : "adminLogin.do";
+                    break;
+                case "adminLogin.do":
+                    file = adminLogin();
+                    break;
+                default:
+                    file = "error.jsp";
+                    break;
             }
         }
         trace("return " + file);
         return file;
+    }
+
+    private boolean checkAdmin(String file) {
+        Boolean b = (Boolean) session.get("admin");
+        if (b != null && b) {
+            return true;
+        }
+        session.put("adminBack", file);
+        return false;
+    }
+
+    private String adminLogin() {
+        String password = attributes.getProperty("password");
+        if (password == null || password.isEmpty() || !server.checkAdminPassword(password)) {
+            return "adminLogin.jsp";
+        }
+        String back = (String) session.remove("adminBack");
+        session.put("admin", true);
+        return back != null ? back : "admin.do";
     }
 
     private String autoCompleteList() {
@@ -357,6 +405,10 @@ public class WebApp {
             boolean ssl = Utils.parseBoolean((String) attributes.get("ssl"), false, false);
             prop.setProperty("webSSL", String.valueOf(ssl));
             server.setSSL(ssl);
+            String adminPassword = server.getAdminPassword();
+            if (adminPassword != null && !adminPassword.isEmpty()) {
+                prop.setProperty("adminPassword", adminPassword);
+            }
             server.saveProperties(prop);
         } catch (Exception e) {
             trace(e.toString());
@@ -983,6 +1035,7 @@ public class WebApp {
         } catch (Exception e) {
             trace(e.toString());
         }
+        session.remove("admin");
         return "index.do";
     }
 
