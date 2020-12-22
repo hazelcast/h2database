@@ -1,5 +1,19 @@
 # Welcome to H2, the Java SQL database. [![Build Status](https://travis-ci.org/h2database/h2database.svg?branch=master)](https://travis-ci.org/h2database/h2database)
 
+## Building H2 for using in Hazelcast Management Center
+
+This branch of H2DB contains patches to fix several security vulnerabilities. We build and use the patched version in
+Hazelcast Management Center. The output file contains no reference to `1.4.197` as it triggers security scanners and
+cause the artifact to be marked vulnerable.
+
+To build and update the version used in Management Center, execute the following command (remember to change the target
+directory according to your local):
+
+```shell
+./build.sh clean
+./build.sh mavenInstallLocal
+```
+
 ## The main features of H2 are:
 
 1. Very fast, open source, JDBC API
