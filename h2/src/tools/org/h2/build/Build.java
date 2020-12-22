@@ -924,32 +924,21 @@ public class Build extends BuildBase {
      */
     @Description(summary = "Build a snapshot H2 jar and upload to local Maven 2 repo.")
     public void mavenInstallLocal() {
-        // MVStore
-        jarMVStore();
-        String pom = new String(readFile(new File("src/installer/pom-mvstore-template.xml")));
-        pom = replaceAll(pom, "@version@", "1.0-SNAPSHOT");
-        writeFile(new File("bin/pom.xml"), pom.getBytes());
-        execScript("mvn", args(
-                "install:install-file",
-                "-Dversion=1.0-SNAPSHOT",
-                "-Dfile=bin/h2-mvstore" + getJarSuffix(),
-                "-Dpackaging=jar",
-                "-DpomFile=bin/pom.xml",
-                "-DartifactId=h2-mvstore",
-                "-DgroupId=com.h2database"));
         // database
         jar();
-        pom = new String(readFile(new File("src/installer/pom-template.xml")));
-        pom = replaceAll(pom, "@version@", "1.0-SNAPSHOT");
+        String pom = new String(readFile(new File("src/installer/pom-template.xml")));
+        pom = replaceAll(pom, "@version@", "hazelcast-patch");
         writeFile(new File("bin/pom.xml"), pom.getBytes());
         execScript("mvn", args(
                 "install:install-file",
-                "-Dversion=1.0-SNAPSHOT",
+                "-Dversion=hazelcast-patch",
                 "-Dfile=bin/h2" + getJarSuffix(),
                 "-Dpackaging=jar",
                 "-DpomFile=bin/pom.xml",
                 "-DartifactId=h2",
-                "-DgroupId=com.h2database"));
+                "-DgroupId=com.h2database",
+                "-DcreateChecksum=true",
+                "-DlocalRepositoryPath=/Users/emre/projects/hazelcast/management-center/src/test/resources/libs"));
     }
 
     /**
